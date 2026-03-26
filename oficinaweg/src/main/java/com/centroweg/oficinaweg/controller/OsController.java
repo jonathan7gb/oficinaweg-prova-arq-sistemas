@@ -1,58 +1,51 @@
 package com.centroweg.oficinaweg.controller;
 
 import com.centroweg.oficinaweg.dto.AbrirOsRequestDTO;
+import com.centroweg.oficinaweg.dto.AlertaProblemaRequestDTO;
 import com.centroweg.oficinaweg.dto.EncerrarOsRequestDTO;
 import com.centroweg.oficinaweg.dto.ExecutarOsRequestDTO;
 import com.centroweg.oficinaweg.model.OrdemServico;
 import com.centroweg.oficinaweg.service.OsService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/os")
 public class OsController {
 
-    @Autowired
-    private OsService osService;
+    private final OsService osService;
+
+    public OsController(OsService osService) {
+        this.osService = osService;
+    }
 
     @PostMapping("/sinalizar")
-    public ResponseEntity<String> sinalizar(@RequestBody AlertaDTO dto) {
-        osService.sinalizarProblema(dto.getNome(), dto.getEquipamento(), dto.getDefeito());
-        return ResponseEntity.ok("Problema sinalizado com sucesso.");
+    public ResponseEntity<Map<String, String>> sinalizar(@Valid @RequestBody AlertaProblemaRequestDTO dto) {
+        String registro = osService.sinalizarProblema(dto.getNome(), dto.getEquipamento(), dto.getDefeito());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", registro));
     }
 
     @PostMapping("/abrir")
-    public ResponseEntity<?> abrirOS(@RequestBody AbrirOsRequestDTO dto) {
-        try {
-            OrdemServico novaOS = osService.abrirOS(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novaOS);
-        }catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+    public ResponseEntity<OrdemServico> abrirOS(@Valid @RequestBody AbrirOsRequestDTO dto) {
+        OrdemServico novaOS = osService.abrirOS(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(novaOS);
     }
 
     @PatchMapping("/executar")
-    public ResponseEntity<String> registrarExecucao(@RequestBody ExecutarOsRequestDTO dto) {
-        try {
-            osService.registrarExecucao(dto);
-            return ResponseEntity.ok("Execução registrada. Aguardando aprovação.");
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+    public ResponseEntity<OrdemServico> registrarExecucao(@Valid @RequestBody ExecutarOsRequestDTO dto) {
+        OrdemServico osAtualizada = osService.registrarExecucao(dto);
+        return ResponseEntity.ok(osAtualizada);
     }
 
     @PatchMapping("/encerrar")
-    public ResponseEntity<String> encerrarOS(@RequestBody EncerrarOsRequestDTO dto) {
-        try {
-            osService.encerrarOS(dto);
-            return ResponseEntity.ok("Ordem de Serviço encerrada e aprovada.");
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+    public ResponseEntity<OrdemServico> encerrarOS(@Valid @RequestBody EncerrarOsRequestDTO dto) {
+        OrdemServico osAtualizada = osService.encerrarOS(dto);
+        return ResponseEntity.ok(osAtualizada);
     }
 
     @GetMapping
