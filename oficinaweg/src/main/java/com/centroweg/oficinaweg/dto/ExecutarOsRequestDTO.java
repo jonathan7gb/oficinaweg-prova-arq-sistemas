@@ -1,5 +1,8 @@
 package com.centroweg.oficinaweg.dto;
 
+import lombok.Data;
+
+@Data
 public class ExecutarOsRequestDTO {
     private Long idOS;
     private Long idAluno;

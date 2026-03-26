@@ -1,7 +1,10 @@
 package com.centroweg.oficinaweg.dto;
 
+import lombok.Data;
+
 import java.util.List;
 
+@Data
 public class AbrirOsRequestDTO {
     private Long idProfessor;
     private String equipamento;
